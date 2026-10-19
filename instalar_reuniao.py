@@ -1,0 +1,338 @@
+#!/usr/bin/env python3
+"""
+Instala (ou atualiza) o app "reuniao" no projeto Django, tudo de uma vez.
+
+Uso: na pasta do projeto (onde esta o manage.py), com o (venv) ativo:
+
+    python instalar_reuniao.py
+
+O que faz:
+  1. Cria/atualiza os arquivos do app reuniao (as imagens e as migracoes que voce ja tem NAO sao tocadas).
+  2. Acrescenta "reuniao" em INSTALLED_APPS de config/settings.py (se ainda nao estiver).
+  3. Acrescenta a rota reuniao/ em config/urls.py (se ainda nao estiver).
+  4. Roda makemigrations e migrate.
+Antes de alterar settings.py e urls.py, guarda uma copia .bak de cada um.
+Para nao rodar as migracoes: python instalar_reuniao.py --sem-migrar
+"""
+import base64
+import re
+import shutil
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+ARQUIVOS = {
+    "reuniao/__init__.py": """
+
+""",
+    "reuniao/apps.py": """
+ZnJvbSBkamFuZ28uYXBwcyBpbXBvcnQgQXBwQ29uZmlnCgoKY2xhc3MgUmV1bmlhb0NvbmZpZyhBcHBDb25maWcpOgogICAgZGVm
+YXVsdF9hdXRvX2ZpZWxkID0gImRqYW5nby5kYi5tb2RlbHMuQmlnQXV0b0ZpZWxkIgogICAgbmFtZSA9ICJyZXVuaWFvIgogICAg
+dmVyYm9zZV9uYW1lID0gIkxpc3RhIGRlIFByZXNlbsOnYSBkYSBSZXVuacOjbyIK
+""",
+    "reuniao/models.py": """
+ZnJvbSBkamFuZ28uZGIgaW1wb3J0IG1vZGVscwpmcm9tIGRqYW5nby51dGlscyBpbXBvcnQgdGltZXpvbmUKCgpjbGFzcyBQYXJ0
+aWNpcGFudGUobW9kZWxzLk1vZGVsKToKICAgICMgZXF1aXZhbGUgw6AgdGFiZWxhIGBwYXJ0aWNpcGFudGVzYCBkbyBNeVNRTCAo
+aWQsIG5vbWUsIHNldG9yLCBkYXRhX2NhZGFzdHJvKQogICAgbm9tZSA9IG1vZGVscy5DaGFyRmllbGQoIk5vbWUgY29tcGxldG8i
+LCBtYXhfbGVuZ3RoPTEwMCkKICAgIHNldG9yID0gbW9kZWxzLkNoYXJGaWVsZCgiU2V0b3IiLCBtYXhfbGVuZ3RoPTUwKQogICAg
+IyBkZWZhdWx0IChlIG7Do28gYXV0b19ub3dfYWRkKSBwYXJhIHBlcm1pdGlyIGltcG9ydGFyIGEgZGF0YSBvcmlnaW5hbCBkb3Mg
+cmVnaXN0cm9zIGFudGlnb3MKICAgIGRhdGFfY2FkYXN0cm8gPSBtb2RlbHMuRGF0ZVRpbWVGaWVsZCgiQ2FkYXN0cmFkbyBlbSIs
+IGRlZmF1bHQ9dGltZXpvbmUubm93KQoKICAgIGNsYXNzIE1ldGE6CiAgICAgICAgdmVyYm9zZV9uYW1lID0gIlBhcnRpY2lwYW50
+ZSIKICAgICAgICB2ZXJib3NlX25hbWVfcGx1cmFsID0gIlBhcnRpY2lwYW50ZXMiCiAgICAgICAgb3JkZXJpbmcgPSBbIi1kYXRh
+X2NhZGFzdHJvIl0KCiAgICBkZWYgX19zdHJfXyhzZWxmKToKICAgICAgICByZXR1cm4gZiJ7c2VsZi5ub21lfSAoe3NlbGYuc2V0
+b3J9KSIK
+""",
+    "reuniao/forms.py": """
+ZnJvbSBkamFuZ28gaW1wb3J0IGZvcm1zCgpmcm9tIC5tb2RlbHMgaW1wb3J0IFBhcnRpY2lwYW50ZQpmcm9tIC5yZWdpb2VzIGlt
+cG9ydCBSRUdJT0VTCgoKY2xhc3MgUGFydGljaXBhbnRlRm9ybShmb3Jtcy5Nb2RlbEZvcm0pOgogICAgIyBsaXN0YSBkZSByZWdp
+w7VlcyBkbyBzY3JpcHQgb3JpZ2luYWw7IG8gYmFuY28gY29udGludWEgZ3VhcmRhbmRvIG8gdGV4dG8gKENoYXJGaWVsZCkKICAg
+IHNldG9yID0gZm9ybXMuQ2hvaWNlRmllbGQoCiAgICAgICAgbGFiZWw9IlJlZ2nDo28iLAogICAgICAgIGNob2ljZXM9WygiIiwg
+IlNlbGVjaW9uZSBhIFJlZ2nDo28iKV0gKyBbKHIsIHIpIGZvciByIGluIFJFR0lPRVNdLAogICAgKQoKICAgIGNsYXNzIE1ldGE6
+CiAgICAgICAgbW9kZWwgPSBQYXJ0aWNpcGFudGUKICAgICAgICBmaWVsZHMgPSBbIm5vbWUiLCAic2V0b3IiXQogICAgICAgIHdp
+ZGdldHMgPSB7CiAgICAgICAgICAgICJub21lIjogZm9ybXMuVGV4dElucHV0KGF0dHJzPXsicGxhY2Vob2xkZXIiOiAiTm9tZSBD
+b21wbGV0byIsICJhdXRvZm9jdXMiOiBUcnVlfSksCiAgICAgICAgfQo=
+""",
+    "reuniao/regioes.py": """
+IyBSZWdpw7VlcyAoY2FtcG8gInNldG9yIikgZG8gZm9ybXVsw6FyaW8gZGUgY2FkYXN0cm8sIG5hIG1lc21hIG9yZGVtIGRvIHNj
+cmlwdCBQSFAuCiMgUGFyYSBhY3Jlc2NlbnRhciBvdSBhbHRlcmFyIHVtYSByZWdpw6NvLCBlZGl0ZSBlc3RhIGxpc3RhLgpSRUdJ
+T0VTID0gWwogICAgIkFndWFzIExpbmRhcy1TYW50YSBDb2ltYnJhIiwKICAgICJBcmVhbCIsCiAgICAiQnJhemxhbmRpYS1JbmNy
+YSAwOCBDZW50cm8iLAogICAgIkJyYXpsYW5kaWEtU2FudGEgQmFyYmFyYSIsCiAgICAiQnJhemxhbmRpYS1TZXRvciBUcmFkaWNp
+b25hbCIsCiAgICAiQnJhemxhbmRpYS1WZW5kaW5oYSIsCiAgICAiQnJhemxhbmRpYS1WaWxhIERpdmluZWlhIiwKICAgICJCcmF6
+bGFuZGlhLVZpbGEgU2FvIEpvc2UiLAogICAgIkNhbmRhbmdvbGFuZGlhIiwKICAgICJDZWlsYW5kaWEtRXhwYW5zYW8gU2V0b3Ig
+TyIsCiAgICAiQ2VpbGFuZGlhLU5vcnRlIiwKICAgICJDZWlsYW5kaWEgTm9ydGUgKEd1YXJpcm9iYSkiLAogICAgIkNlaWxhbmRp
+YS1QIE5vcnRlIiwKICAgICJDZWlsYW5kaWEtUW5yIiwKICAgICJDZWlsYW5kaWEtU2V0b3IgTyIsCiAgICAiQ2VpbGFuZGlhLVNl
+dG9yIFAuU3VsIiwKICAgICJDZWlsYW5kaWEtU29sIE5hc2NlbnRlIiwKICAgICJDZWlsYW5kaWEgU3VsIiwKICAgICJDb25pYyIs
+CiAgICAiQ3Jpc3RhbGluYS1MdXN0b3NhIiwKICAgICJDcmlzdGFsaW5hLU1hcmFqbyIsCiAgICAiRGVsIExhZ28gMDIiLAogICAg
+IkRmLUFndWFzIExpbmRhcy1QYXJxdWUgQWd1YXMgQm9uaXRhcyIsCiAgICAiRW5nZW5obyBEYXMgTGFqZXMiLAogICAgIkVzdHJ1
+dHVyYWwiLAogICAgIkZhemVuZGluaGEiLAogICAgIkdhbWEgU2V0b3IgU3VsLVNldG9yIExlc3RlIiwKICAgICJHYW1hLVNldG9y
+IFN1bCIsCiAgICAiR3VhcmEiLAogICAgIkl0YXBvYSIsCiAgICAiTHV6aWFuaWEtQ3Jpc3RhbGluYSIsCiAgICAiTW9ycm8gQXp1
+bCIsCiAgICAiUGFyYW5vYSIsCiAgICAiUGFyYW5vYS1CdXJpdGkgVmVybWVsaG8iLAogICAgIlBhcmFub2EtQ2FmZSBTZW0gVHJv
+Y2EiLAogICAgIlBhcmFub2EtQ2VudHJvIiwKICAgICJQYXJhbm9hLUphcmRpbSBJSSIsCiAgICAiUGxhbmFsdGluYS1BcmFwb25n
+YXMiLAogICAgIlBsYW5hbHRpbmEtQnVyaXRpIElWIiwKICAgICJQbGFuYWx0aW5hLUVzdGFuY2lhIiwKICAgICJQbGFuYWx0aW5h
+LU1vcnJvIEF6dWwiLAogICAgIlBsYW5hbHRpbmEtUmVjYW50byBEbyBTb3NzZWdvIiwKICAgICJQbGFuYWx0aW5hLVZpbGEgQnVy
+aXRpcyIsCiAgICAiUmVjYW50byBEYSBFbWFzIiwKICAgICJSZWNhbnRvIERhcyBFbWFzLURvbSBGcmFuY2lzY28iLAogICAgIlJl
+Y2FudG8tUmVjYW50byBEYSBFbWFzIiwKICAgICJSaWFjaG8gRnVuZG8gSUkiLAogICAgIlNhbWFtYmFpYSBOb3J0ZSIsCiAgICAi
+U2FtYW1iYWlhIFN1bCIsCiAgICAiU2FtYW1iYWlhLVNhbWFtYmFpYSBOb3J0ZSIsCiAgICAiU2FtYW1iYWlhLVNhbWFtYmFpYSBT
+dWwiLAogICAgIlNhbnRhIE1hcmlhIiwKICAgICJTYW50YSBNYXJpYSBTZXRvciBTdWwiLAogICAgIlNhbnRhIE1hcmlhLU5vcnRl
+IiwKICAgICJTYW50YSBNYXJpYS1TYW50YSBNYXJpYSBEbyBTdWwiLAogICAgIlNhbnRvIEFudG9uaW8tSmFyZGltIEFsYSIsCiAg
+ICAiU2FudG8gQW50b25pby1QYXJrIEVzdHJlbGEgRGFsdmEgWEkiLAogICAgIlNhbyBEb21pbmdvcy1DZW50cm8iLAogICAgIlNh
+byBTZWJhc3RpYW8tU2FvIEpvc2UiLAogICAgIlNhbyBTZWJhc3RpYW8tU2V0b3IgVHJhZGljaW9uYWwiLAogICAgIlNldG9yIElu
+ZHVzdHJpYWwiLAogICAgIlNvYnJhZGluaG8iLAogICAgIlNvYnJhZGluaG8tQm9hIFZpc3RhIiwKICAgICJTb2JyYWRpbmhvLU5v
+dmEgQ29saW5hIiwKICAgICJTb2JyYWRpbmhvLVNldG9yIERlIE1hbnNvZXMiLAogICAgIlNvYnJhZGluaG8tU2V0b3IgRmVyY2Fs
+IiwKICAgICJTb2JyYWRpbmhvLVNvYnJhZGluaG8gSUkiLAogICAgIlRhYm9xdWluaGEtTmFvIENvbnN0YSIsCiAgICAiVGFndWF0
+aW5nYS1Ob3J0ZSIsCiAgICAiVGFndWF0aW5nYS1TdWwiLAogICAgIlZhbHBhcmFpc28gRGUgR29pYXMtRXRhcGEiLAogICAgIlZh
+bHBhcmFpc28tQ3J1emVpcm8iLAogICAgIlZhcmphbyIsCiAgICAiVmlsYSBNYWR1cmVpcmEiLApdCg==
+""",
+    "reuniao/views.py": """
+aW1wb3J0IGRhdGV0aW1lCgpmcm9tIGRqYW5nby5jb250cmliIGltcG9ydCBtZXNzYWdlcwpmcm9tIGRqYW5nby5jb250cmliLmF1
+dGgubWl4aW5zIGltcG9ydCBMb2dpblJlcXVpcmVkTWl4aW4KZnJvbSBkamFuZ28udXJscyBpbXBvcnQgcmV2ZXJzZV9sYXp5CmZy
+b20gZGphbmdvLnV0aWxzIGltcG9ydCB0aW1lem9uZQpmcm9tIGRqYW5nby52aWV3cy5nZW5lcmljIGltcG9ydCBDcmVhdGVWaWV3
+LCBMaXN0VmlldwoKZnJvbSAuZm9ybXMgaW1wb3J0IFBhcnRpY2lwYW50ZUZvcm0KZnJvbSAubW9kZWxzIGltcG9ydCBQYXJ0aWNp
+cGFudGUKCgpjbGFzcyBDYWRhc3Ryb1ZpZXcoTG9naW5SZXF1aXJlZE1peGluLCBDcmVhdGVWaWV3KToKICAgICIiIlN1YnN0aXR1
+aSBvIGluZGV4LnBocDogbm9tZSArIHJlZ2nDo28uIiIiCiAgICBtb2RlbCA9IFBhcnRpY2lwYW50ZQogICAgZm9ybV9jbGFzcyA9
+IFBhcnRpY2lwYW50ZUZvcm0KICAgIHRlbXBsYXRlX25hbWUgPSAicmV1bmlhby9jYWRhc3Ryby5odG1sIgogICAgc3VjY2Vzc191
+cmwgPSByZXZlcnNlX2xhenkoInJldW5pYW9fY2FkYXN0cm8iKQoKICAgIGRlZiBmb3JtX3ZhbGlkKHNlbGYsIGZvcm0pOgogICAg
+ICAgIHJlc3Bvc3RhID0gc3VwZXIoKS5mb3JtX3ZhbGlkKGZvcm0pCiAgICAgICAgbWVzc2FnZXMuc3VjY2VzcyhzZWxmLnJlcXVl
+c3QsIGYie3NlbGYub2JqZWN0Lm5vbWV9IHNhbHZvKGEpIGNvbSBzdWNlc3NvISIpCiAgICAgICAgcmV0dXJuIHJlc3Bvc3RhCgoK
+Y2xhc3MgSW1wcmVzc2FvVmlldyhMb2dpblJlcXVpcmVkTWl4aW4sIExpc3RWaWV3KToKICAgICIiIlN1YnN0aXR1aSBvIGltcHJl
+c3Nhby5waHA6IGxpc3RhIGRlIHByZXNlbsOnYSBkZSB1bWEgZGF0YSAoP2RhdGFfcmV1bmlhbz1BQUFBLU1NLUREKSwgZW0gNCBj
+b2x1bmFzLiIiIgogICAgdGVtcGxhdGVfbmFtZSA9ICJyZXVuaWFvL2ltcHJlc3Nhby5odG1sIgogICAgY29udGV4dF9vYmplY3Rf
+bmFtZSA9ICJwYXJ0aWNpcGFudGVzIgoKICAgIGRlZiBnZXRfcXVlcnlzZXQoc2VsZik6CiAgICAgICAgdHJ5OgogICAgICAgICAg
+ICBzZWxmLmRhdGEgPSBkYXRldGltZS5kYXRlLmZyb21pc29mb3JtYXQoc2VsZi5yZXF1ZXN0LkdFVC5nZXQoImRhdGFfcmV1bmlh
+byIsICIiKSkKICAgICAgICBleGNlcHQgVmFsdWVFcnJvcjoKICAgICAgICAgICAgc2VsZi5kYXRhID0gdGltZXpvbmUubG9jYWxk
+YXRlKCkKICAgICAgICAjIG1lc21hIG9yZGVtIGRvIFBIUDogZG8gY2FkYXN0cm8gbWFpcyByZWNlbnRlIHBhcmEgbyBtYWlzIGFu
+dGlnbwogICAgICAgIHJldHVybiBQYXJ0aWNpcGFudGUub2JqZWN0cy5maWx0ZXIoZGF0YV9jYWRhc3Ryb19fZGF0ZT1zZWxmLmRh
+dGEpLm9yZGVyX2J5KCItZGF0YV9jYWRhc3RybyIpCgogICAgZGVmIGdldF9jb250ZXh0X2RhdGEoc2VsZiwgKiprd2FyZ3MpOgog
+ICAgICAgIGNvbnRleHRvID0gc3VwZXIoKS5nZXRfY29udGV4dF9kYXRhKCoqa3dhcmdzKQogICAgICAgIGNvbnRleHRvWyJkYXRh
+Il0gPSBzZWxmLmRhdGEKICAgICAgICBjb250ZXh0b1sidG90YWxfZGlhIl0gPSBsZW4oY29udGV4dG9bInBhcnRpY2lwYW50ZXMi
+XSkKICAgICAgICByZXR1cm4gY29udGV4dG8K
+""",
+    "reuniao/urls.py": """
+ZnJvbSBkamFuZ28udXJscyBpbXBvcnQgcGF0aAoKZnJvbSAuIGltcG9ydCB2aWV3cwoKdXJscGF0dGVybnMgPSBbCiAgICBwYXRo
+KCIiLCB2aWV3cy5DYWRhc3Ryb1ZpZXcuYXNfdmlldygpLCBuYW1lPSJyZXVuaWFvX2NhZGFzdHJvIiksCiAgICBwYXRoKCJpbXBy
+ZXNzYW8vIiwgdmlld3MuSW1wcmVzc2FvVmlldy5hc192aWV3KCksIG5hbWU9InJldW5pYW9faW1wcmVzc2FvIiksCl0K
+""",
+    "reuniao/admin.py": """
+ZnJvbSBkamFuZ28uY29udHJpYiBpbXBvcnQgYWRtaW4KCmZyb20gLm1vZGVscyBpbXBvcnQgUGFydGljaXBhbnRlCgoKQGFkbWlu
+LnJlZ2lzdGVyKFBhcnRpY2lwYW50ZSkKY2xhc3MgUGFydGljaXBhbnRlQWRtaW4oYWRtaW4uTW9kZWxBZG1pbik6CiAgICBsaXN0
+X2Rpc3BsYXkgPSAoIm5vbWUiLCAic2V0b3IiLCAiZGF0YV9jYWRhc3RybyIpCiAgICBzZWFyY2hfZmllbGRzID0gKCJub21lIiwg
+InNldG9yIikKICAgIGxpc3RfZmlsdGVyID0gKCJzZXRvciIsKQogICAgZGF0ZV9oaWVyYXJjaHkgPSAiZGF0YV9jYWRhc3RybyIK
+""",
+    "reuniao/management/__init__.py": """
+
+""",
+    "reuniao/management/commands/__init__.py": """
+
+""",
+    "reuniao/management/commands/importar_participantes.py": """
+aW1wb3J0IGNzdgppbXBvcnQgZGF0ZXRpbWUKCmZyb20gZGphbmdvLmNvcmUubWFuYWdlbWVudC5iYXNlIGltcG9ydCBCYXNlQ29t
+bWFuZCwgQ29tbWFuZEVycm9yCmZyb20gZGphbmdvLnV0aWxzIGltcG9ydCB0aW1lem9uZQoKZnJvbSByZXVuaWFvLm1vZGVscyBp
+bXBvcnQgUGFydGljaXBhbnRlCgoKY2xhc3MgQ29tbWFuZChCYXNlQ29tbWFuZCk6CiAgICBoZWxwID0gKCJJbXBvcnRhIHBhcnRp
+Y2lwYW50ZXMgZGUgdW0gQ1NWIGV4cG9ydGFkbyBkbyBNeVNRTC9waHBNeUFkbWluLiAiCiAgICAgICAgICAgICJDb2x1bmFzOiBu
+b21lLCBzZXRvciBlIChvcGNpb25hbCkgZGF0YV9jYWRhc3Ryby4gUG9kZSByb2RhciBkZSBub3ZvIHNlbSBkdXBsaWNhci4iKQoK
+ICAgIGRlZiBhZGRfYXJndW1lbnRzKHNlbGYsIHBhcnNlcik6CiAgICAgICAgcGFyc2VyLmFkZF9hcmd1bWVudCgiYXJxdWl2byIs
+IGhlbHA9ImNhbWluaG8gZG8gYXJxdWl2byAuY3N2IikKCiAgICBkZWYgaGFuZGxlKHNlbGYsICphcmdzLCAqKm9wdHMpOgogICAg
+ICAgIHRyeToKICAgICAgICAgICAgZiA9IG9wZW4ob3B0c1siYXJxdWl2byJdLCBuZXdsaW5lPSIiLCBlbmNvZGluZz0idXRmLTgt
+c2lnIikKICAgICAgICBleGNlcHQgT1NFcnJvciBhcyBlOgogICAgICAgICAgICByYWlzZSBDb21tYW5kRXJyb3IoZiJOw6NvIGNv
+bnNlZ3VpIGFicmlyIG8gYXJxdWl2bzoge2V9IikKICAgICAgICB3aXRoIGY6CiAgICAgICAgICAgIHByaW1laXJhID0gZi5yZWFk
+bGluZSgpCiAgICAgICAgICAgIGYuc2VlaygwKQogICAgICAgICAgICBkZWxpbWl0YWRvciA9ICI7IiBpZiBwcmltZWlyYS5jb3Vu
+dCgiOyIpID4gcHJpbWVpcmEuY291bnQoIiwiKSBlbHNlICIsIgogICAgICAgICAgICBsZWl0b3IgPSBjc3YuRGljdFJlYWRlcihm
+LCBkZWxpbWl0ZXI9ZGVsaW1pdGFkb3IpCiAgICAgICAgICAgIGxlaXRvci5maWVsZG5hbWVzID0gWyhjIG9yICIiKS5zdHJpcCgp
+Lmxvd2VyKCkgZm9yIGMgaW4gKGxlaXRvci5maWVsZG5hbWVzIG9yIFtdKV0KICAgICAgICAgICAgaWYgIm5vbWUiIG5vdCBpbiBs
+ZWl0b3IuZmllbGRuYW1lcyBvciAic2V0b3IiIG5vdCBpbiBsZWl0b3IuZmllbGRuYW1lczoKICAgICAgICAgICAgICAgIHJhaXNl
+IENvbW1hbmRFcnJvcigiTyBDU1YgcHJlY2lzYSB0ZXIgYXMgY29sdW5hcyAnbm9tZScgZSAnc2V0b3InIG5hIHByaW1laXJhIGxp
+bmhhLiIpCgogICAgICAgICAgICBub3ZvcyA9IHJlcGV0aWRvcyA9IHNlbV9kYXRhID0gMAogICAgICAgICAgICBmb3IgbGluaGEg
+aW4gbGVpdG9yOgogICAgICAgICAgICAgICAgbm9tZSA9IChsaW5oYS5nZXQoIm5vbWUiKSBvciAiIikuc3RyaXAoKVs6MTAwXQog
+ICAgICAgICAgICAgICAgc2V0b3IgPSAobGluaGEuZ2V0KCJzZXRvciIpIG9yICIiKS5zdHJpcCgpWzo1MF0KICAgICAgICAgICAg
+ICAgIGlmIG5vdCBub21lOgogICAgICAgICAgICAgICAgICAgIGNvbnRpbnVlCiAgICAgICAgICAgICAgICB0ZXh0b19kYXRhID0g
+KGxpbmhhLmdldCgiZGF0YV9jYWRhc3RybyIpIG9yICIiKS5zdHJpcCgpCiAgICAgICAgICAgICAgICB0cnk6CiAgICAgICAgICAg
+ICAgICAgICAgZGF0YSA9IGRhdGV0aW1lLmRhdGV0aW1lLmZyb21pc29mb3JtYXQodGV4dG9fZGF0YSkKICAgICAgICAgICAgICAg
+ICAgICBpZiB0aW1lem9uZS5pc19uYWl2ZShkYXRhKToKICAgICAgICAgICAgICAgICAgICAgICAgZGF0YSA9IHRpbWV6b25lLm1h
+a2VfYXdhcmUoZGF0YSkgICMgaG9yw6FyaW8gZGUgQnJhc8OtbGlhLCBjb21vIG5vIE15U1FMCiAgICAgICAgICAgICAgICBleGNl
+cHQgVmFsdWVFcnJvcjoKICAgICAgICAgICAgICAgICAgICBkYXRhID0gdGltZXpvbmUubm93KCkKICAgICAgICAgICAgICAgICAg
+ICBzZW1fZGF0YSArPSAxCiAgICAgICAgICAgICAgICBfLCBjcmlhZG8gPSBQYXJ0aWNpcGFudGUub2JqZWN0cy5nZXRfb3JfY3Jl
+YXRlKG5vbWU9bm9tZSwgc2V0b3I9c2V0b3IsIGRhdGFfY2FkYXN0cm89ZGF0YSkKICAgICAgICAgICAgICAgIG5vdm9zICs9IGNy
+aWFkbwogICAgICAgICAgICAgICAgcmVwZXRpZG9zICs9IChub3QgY3JpYWRvKQogICAgICAgIHNlbGYuc3Rkb3V0LndyaXRlKHNl
+bGYuc3R5bGUuU1VDQ0VTUygKICAgICAgICAgICAgZiJ7bm92b3N9IGltcG9ydGFkbyhzKTsge3JlcGV0aWRvc30gasOhIGV4aXN0
+aWEobSkuIikpCiAgICAgICAgaWYgc2VtX2RhdGE6CiAgICAgICAgICAgIHNlbGYuc3Rkb3V0LndyaXRlKHNlbGYuc3R5bGUuV0FS
+TklORygKICAgICAgICAgICAgICAgIGYie3NlbV9kYXRhfSBsaW5oYShzKSBzZW0gZGF0YSB2w6FsaWRhIGZpY2FyYW0gY29tIGEg
+ZGF0YS9ob3JhIGRlIGFnb3JhLiIpKQo=
+""",
+    "reuniao/migrations/__init__.py": """
+
+""",
+    "reuniao/templates/reuniao/cadastro.html": """
+eyUgbG9hZCBzdGF0aWMgJX08IURPQ1RZUEUgaHRtbD4KPGh0bWwgbGFuZz0icHQtYnIiPgo8aGVhZD4KICAgIDxtZXRhIGNoYXJz
+ZXQ9IlVURi04Ij4KICAgIDxtZXRhIG5hbWU9InZpZXdwb3J0IiBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsIGluaXRpYWwt
+c2NhbGU9MSI+CiAgICA8dGl0bGU+Q2FkYXN0cm8gZGUgUGFydGljaXBhbnRlczwvdGl0bGU+CiAgICA8bGluayByZWw9Imljb24i
+IHR5cGU9ImltYWdlL3BuZyIgaHJlZj0ieyUgc3RhdGljICdyZXVuaWFvL2ltZy9sb2dvLnBuZycgJX0iPgogICAgPHN0eWxlPgog
+ICAgICAgIGJvZHkgeyBmb250LWZhbWlseTogQXJpYWwsIHNhbnMtc2VyaWY7IGZvbnQtc2l6ZTogMzBweDsgdGV4dC1hbGlnbjog
+Y2VudGVyOyBtYXJnaW4tdG9wOiAxMHB4OyB9CiAgICAgICAgLmxvZ28geyBtYXgtd2lkdGg6IDQwMHB4OyBoZWlnaHQ6IGF1dG87
+IG1hcmdpbi1ib3R0b206IDEwcHg7IH0KICAgICAgICBoMiB7IG1hcmdpbi10b3A6IDA7IG1hcmdpbi1ib3R0b206IDE1cHg7IH0K
+ICAgICAgICBmb3JtIHsgZGlzcGxheTogaW5saW5lLWJsb2NrOyB0ZXh0LWFsaWduOiBsZWZ0OyB9CgogICAgICAgIGlucHV0W3R5
+cGU9dGV4dF0sIHNlbGVjdCB7CiAgICAgICAgICAgIGRpc3BsYXk6IGJsb2NrOyBtYXJnaW4tYm90dG9tOiAxMHB4OyB3aWR0aDog
+NTIwcHg7IG1heC13aWR0aDogOTJ2dzsKICAgICAgICAgICAgcGFkZGluZzogOHB4OyBmb250LXNpemU6IDIwcHg7IGJveC1zaXpp
+bmc6IGJvcmRlci1ib3g7CiAgICAgICAgfQogICAgICAgIGJ1dHRvbiB7IHdpZHRoOiAxMDAlOyBwYWRkaW5nOiAxMHB4OyBjdXJz
+b3I6IHBvaW50ZXI7IGJhY2tncm91bmQtY29sb3I6ICMyYzNlNTA7IGNvbG9yOiB3aGl0ZTsgYm9yZGVyOiBub25lOyBmb250LXNp
+emU6IDIwcHg7IH0KICAgICAgICAubGluay1mb290ZXIgeyBkaXNwbGF5OiBibG9jazsgbWFyZ2luLXRvcDogMTVweDsgfQogICAg
+ICAgIC5vayB7IGZvbnQtc2l6ZTogMThweDsgY29sb3I6ICMxYjZlMmU7IG1hcmdpbi1ib3R0b206IDEwcHg7IH0KICAgICAgICAu
+ZXJybyB7IGNvbG9yOiAjYjAwMDIwOyBmb250LXNpemU6IDE2cHg7IG1hcmdpbjogMCAwIDZweDsgcGFkZGluZzogMDsgbGlzdC1z
+dHlsZTogbm9uZTsgfQogICAgPC9zdHlsZT4KPC9oZWFkPgo8Ym9keT4KCiAgICA8aW1nIHNyYz0ieyUgc3RhdGljICdyZXVuaWFv
+L2ltZy9ob3Jpem9udGFsX3BvcnR1Z3Vlcy5wbmcnICV9IiBhbHQ9IkxvZ28iIGNsYXNzPSJsb2dvIj4KCiAgICA8aDI+Q2FkYXN0
+cmFyIFBhcnRpY2lwYW50ZTwvaDI+CgogICAgeyUgZm9yIG0gaW4gbWVzc2FnZXMgJX08ZGl2IGNsYXNzPSJvayI+4pyUIHt7IG0g
+fX08L2Rpdj57JSBlbmRmb3IgJX0KCiAgICA8Zm9ybSBtZXRob2Q9InBvc3QiPgogICAgICAgIHslIGNzcmZfdG9rZW4gJX0KICAg
+ICAgICB7eyBmb3JtLm5vbl9maWVsZF9lcnJvcnMgfX0KICAgICAgICB7eyBmb3JtLm5vbWUuZXJyb3JzIH19CiAgICAgICAge3sg
+Zm9ybS5ub21lIH19CiAgICAgICAge3sgZm9ybS5zZXRvci5lcnJvcnMgfX0KICAgICAgICB7eyBmb3JtLnNldG9yIH19CiAgICAg
+ICAgPGJ1dHRvbiB0eXBlPSJzdWJtaXQiPlNhbHZhcjwvYnV0dG9uPgogICAgPC9mb3JtPgogICAgPGJyPjxicj48YnI+CgogICAg
+PGEgaHJlZj0ieyUgdXJsICdyZXVuaWFvX2ltcHJlc3NhbycgJX0iIGNsYXNzPSJsaW5rLWZvb3RlciI+SXIgcGFyYSBMaXN0YSBk
+ZSBJbXByZXNzw6NvPC9hPgoKPC9ib2R5Pgo8L2h0bWw+Cg==
+""",
+    "reuniao/templates/reuniao/impressao.html": """
+eyUgbG9hZCBzdGF0aWMgJX08IURPQ1RZUEUgaHRtbD4KPGh0bWwgbGFuZz0icHQtYnIiPgo8aGVhZD4KICAgIDxtZXRhIGNoYXJz
+ZXQ9IlVURi04Ij4KICAgIDx0aXRsZT5MaXN0YSBwYXJhIEltcHJlc3PDo28gLSB7eyBkYXRhfGRhdGU6ImQvbS9ZIiB9fTwvdGl0
+bGU+CiAgICA8bGluayByZWw9Imljb24iIHR5cGU9ImltYWdlL3BuZyIgaHJlZj0ieyUgc3RhdGljICdyZXVuaWFvL2ltZy9sb2dv
+LnBuZycgJX0iPgogICAgPHN0eWxlPgogICAgICAgIGJvZHkgeyBmb250LWZhbWlseTogQXJpYWwsIHNhbnMtc2VyaWY7IHRleHQt
+YWxpZ246IGNlbnRlcjsgbWFyZ2luLXRvcDogMDsgcGFkZGluZy10b3A6IDVweDsgfQogICAgICAgIC5sb2dvIHsgbWF4LXdpZHRo
+OiA0MDBweDsgaGVpZ2h0OiBhdXRvOyBtYXJnaW4tYm90dG9tOiA1cHg7IH0KCiAgICAgICAgLmhlYWRlciB7IHRleHQtYWxpZ246
+IGNlbnRlcjsgbWFyZ2luLWJvdHRvbTogMTBweDsgYm9yZGVyLWJvdHRvbTogMnB4IHNvbGlkICMwMDA7IHBhZGRpbmctYm90dG9t
+OiAxMHB4OyB9CiAgICAgICAgaDEgeyBtYXJnaW4tdG9wOiAwOyBtYXJnaW4tYm90dG9tOiAwOyBmb250LXNpemU6IDI0cHg7IH0K
+ICAgICAgICAuaGVhZGVyIHAgeyBtYXJnaW4tdG9wOiAycHg7IG1hcmdpbi1ib3R0b206IDVweDsgfQoKICAgICAgICAudG90YWwt
+aW5mbyB7IGZvbnQtc2l6ZTogMThweDsgZm9udC13ZWlnaHQ6IGJvbGQ7IGJhY2tncm91bmQtY29sb3I6ICNlZWU7IGRpc3BsYXk6
+IGlubGluZS1ibG9jazsKICAgICAgICAgICAgICAgICAgICAgIHBhZGRpbmc6IDVweCAxNXB4OyBib3JkZXI6IDFweCBzb2xpZCAj
+MDAwOyBtYXJnaW4tdG9wOiAycHg7IH0KCiAgICAgICAgLmdyaWQtY29udGFpbmVyIHsgZGlzcGxheTogZ3JpZDsgZ3JpZC10ZW1w
+bGF0ZS1jb2x1bW5zOiByZXBlYXQoNCwgMWZyKTsgZ2FwOiA1cHg7IHBhZGRpbmc6IDEwcHg7IH0KICAgICAgICAuYm94IHsgYm9y
+ZGVyOiAxcHggc29saWQgIzAwMDsgcGFkZGluZzogNXB4OyBmb250LXNpemU6IDExcHg7IG1pbi1oZWlnaHQ6IDQ1cHg7IHRleHQt
+YWxpZ246IGxlZnQ7CiAgICAgICAgICAgICAgIGRpc3BsYXk6IGZsZXg7IGZsZXgtZGlyZWN0aW9uOiBjb2x1bW47IGp1c3RpZnkt
+Y29udGVudDogY2VudGVyOyBicmVhay1pbnNpZGU6IGF2b2lkOyB9CiAgICAgICAgLm5vbWUgeyBmb250LXdlaWdodDogYm9sZDsg
+ZGlzcGxheTogYmxvY2s7IHRleHQtdHJhbnNmb3JtOiB1cHBlcmNhc2U7IH0KICAgICAgICAuc2V0b3IgeyBmb250LXNpemU6IDlw
+eDsgY29sb3I6ICM0NDQ7IH0KCiAgICAgICAgLmJ0bi1wcmludCB7IHBhZGRpbmc6IDEwcHggMjBweDsgYmFja2dyb3VuZDogIzJj
+M2U1MDsgY29sb3I6IHdoaXRlOyBib3JkZXI6IG5vbmU7IGN1cnNvcjogcG9pbnRlcjsKICAgICAgICAgICAgICAgICAgICAgbWFy
+Z2luLWJvdHRvbTogMTBweDsgZm9udC13ZWlnaHQ6IGJvbGQ7IH0KICAgICAgICAudm9sdGFyIHsgZGlzcGxheTogaW5saW5lLWJs
+b2NrOyBtYXJnaW4tbGVmdDogMTVweDsgfQoKICAgICAgICBAcGFnZSB7IHNpemU6IEE0IHBvcnRyYWl0OyBtYXJnaW46IDAuOGNt
+OyB9CiAgICAgICAgQG1lZGlhIHByaW50IHsKICAgICAgICAgICAgLm5vLXByaW50IHsgZGlzcGxheTogbm9uZSAhaW1wb3J0YW50
+OyB9CiAgICAgICAgICAgIGJvZHkgeyBtYXJnaW46IDA7IHBhZGRpbmc6IDAuMmNtOyB9CiAgICAgICAgICAgIC50b3RhbC1pbmZv
+IHsgYmFja2dyb3VuZC1jb2xvcjogdHJhbnNwYXJlbnQ7IH0KICAgICAgICB9CiAgICA8L3N0eWxlPgo8L2hlYWQ+Cjxib2R5PgoK
+ICAgIDxpbWcgc3JjPSJ7JSBzdGF0aWMgJ3JldW5pYW8vaW1nL2hvcml6b250YWxfcG9ydHVndWVzLnBuZycgJX0iIGFsdD0iTG9n
+byIgY2xhc3M9ImxvZ28iPgoKICAgIDxkaXYgY2xhc3M9ImhlYWRlciI+CiAgICAgICAgPGgxPkxJU1RBIERFIFBSRVNFTsOHQTwv
+aDE+CiAgICAgICAgPHA+RGF0YTogPHN0cm9uZz57eyBkYXRhfGRhdGU6ImQvbS9ZIiB9fTwvc3Ryb25nPiB8IEJyYXPDrWxpYSwg
+REY8L3A+CgogICAgICAgIDxkaXYgY2xhc3M9InRvdGFsLWluZm8iPlRPVEFMIERFIFBBUlRJQ0lQQU5URVM6IHt7IHRvdGFsX2Rp
+YSB9fTwvZGl2PgogICAgICAgIDxicj4KICAgICAgICA8ZGl2IGNsYXNzPSJuby1wcmludCI+CiAgICAgICAgICAgIDxidXR0b24g
+Y2xhc3M9ImJ0bi1wcmludCIgb25jbGljaz0id2luZG93LnByaW50KCkiPvCflqjvuI8gSW1wcmltaXIgQWdvcmE8L2J1dHRvbj4K
+ICAgICAgICAgICAgPGEgY2xhc3M9InZvbHRhciIgaHJlZj0ieyUgdXJsICdyZXVuaWFvX2NhZGFzdHJvJyAlfSI+4oaQIFZvbHRh
+ciBhbyBjYWRhc3RybzwvYT4KICAgICAgICAgICAgPGZvcm0gbWV0aG9kPSJnZXQiIHN0eWxlPSJtYXJnaW4tdG9wOjhweDsiPgog
+ICAgICAgICAgICAgICAgT3V0cmEgZGF0YTogPGlucHV0IHR5cGU9ImRhdGUiIG5hbWU9ImRhdGFfcmV1bmlhbyIgdmFsdWU9Int7
+IGRhdGF8ZGF0ZTonWS1tLWQnIH19IiByZXF1aXJlZD4KICAgICAgICAgICAgICAgIDxidXR0b24gdHlwZT0ic3VibWl0Ij5BYnJp
+cjwvYnV0dG9uPgogICAgICAgICAgICA8L2Zvcm0+CiAgICAgICAgPC9kaXY+CiAgICA8L2Rpdj4KCiAgICA8ZGl2IGNsYXNzPSJn
+cmlkLWNvbnRhaW5lciI+CiAgICAgICAgeyUgZm9yIHAgaW4gcGFydGljaXBhbnRlcyAlfQogICAgICAgICAgICA8ZGl2IGNsYXNz
+PSJib3giPgogICAgICAgICAgICAgICAgPHNwYW4gY2xhc3M9Im5vbWUiPnt7IHAubm9tZSB9fTwvc3Bhbj4KICAgICAgICAgICAg
+ICAgIDxzcGFuIGNsYXNzPSJzZXRvciI+e3sgcC5zZXRvciB9fTwvc3Bhbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgeyUg
+ZW1wdHkgJX0KICAgICAgICAgICAgPHAgc3R5bGU9ImdyaWQtY29sdW1uOiBzcGFuIDQ7Ij5OZW5odW0gcmVnaXN0cm8gZW5jb250
+cmFkbyBwYXJhIGVzdGEgZGF0YS48L3A+CiAgICAgICAgeyUgZW5kZm9yICV9CiAgICA8L2Rpdj4KCjwvYm9keT4KPC9odG1sPgo=
+""",
+}
+
+PASTA = Path.cwd()
+
+
+def sair(msg):
+    print("ERRO:", msg)
+    sys.exit(1)
+
+
+def backup(caminho):
+    destino = caminho.with_name(caminho.name + time.strftime(".%Y%m%d-%H%M%S.bak"))
+    shutil.copy2(caminho, destino)
+    print(f"   copia de seguranca: {destino.name}")
+
+
+def instalar_arquivos():
+    print("1) Arquivos do app reuniao")
+    for rel, b64 in ARQUIVOS.items():
+        destino = PASTA / rel
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        # __init__.py das migracoes: so cria se nao existir (nao mexe nas migracoes existentes)
+        if destino.exists() and rel.endswith("migrations/__init__.py"):
+            continue
+        destino.write_bytes(base64.b64decode("".join(b64.split())))
+        print("   ok", rel)
+    (PASTA / "reuniao/static/reuniao/img").mkdir(parents=True, exist_ok=True)
+    print("   pasta das imagens: reuniao/static/reuniao/img (coloque logo.png e horizontal_portugues.png aqui)")
+
+
+def ajustar_settings():
+    print("2) config/settings.py")
+    caminho = PASTA / "config" / "settings.py"
+    texto = caminho.read_text(encoding="utf-8")
+    if re.search(r"""['"]reuniao['"]""", texto):
+        print("   ja tem 'reuniao' em INSTALLED_APPS")
+        return
+    m = re.search(r"INSTALLED_APPS\s*=\s*\[", texto)
+    if not m:
+        sair("nao achei INSTALLED_APPS em config/settings.py; acrescente 'reuniao' na mao.")
+    fim = texto.index("]", m.end())
+    aspas = "'" if "'django.contrib" in texto[m.end():fim] else '"'
+    ultima = [l for l in texto[m.end():fim].splitlines() if l.strip()][-1]
+    recuo = ultima[: len(ultima) - len(ultima.lstrip())] or "    "
+    trecho = texto[m.end():fim].rstrip()
+    if trecho and not trecho.endswith(","):
+        trecho += ","
+    novo = texto[:m.end()] + trecho + f"\n{recuo}{aspas}reuniao{aspas},\n" + texto[fim:]
+    backup(caminho)
+    caminho.write_text(novo, encoding="utf-8")
+    print("   'reuniao' acrescentado em INSTALLED_APPS")
+
+
+def ajustar_urls():
+    print("3) config/urls.py")
+    caminho = PASTA / "config" / "urls.py"
+    texto = caminho.read_text(encoding="utf-8")
+    if "reuniao.urls" in texto:
+        print("   a rota reuniao/ ja existe")
+        return
+    aspas = "'" if "path('" in texto else '"'
+    linha = f"path({aspas}reuniao/{aspas}, include({aspas}reuniao.urls{aspas})),"
+    linhas = texto.splitlines()
+    alvo = next((i for i, l in enumerate(linhas) if "membros.urls" in l), None)
+    if alvo is not None:
+        recuo = linhas[alvo][: len(linhas[alvo]) - len(linhas[alvo].lstrip())]
+        linhas.insert(alvo, recuo + linha)
+    else:
+        i = next((i for i, l in enumerate(linhas) if re.match(r"\s*urlpatterns\s*=\s*\[", l)), None)
+        if i is None:
+            sair("nao achei urlpatterns em config/urls.py; acrescente a rota na mao: " + linha)
+        linhas.insert(i + 1, "    " + linha)
+    if not re.search(r"from django.urls import[^\n]*\binclude\b", texto):
+        sair("config/urls.py nao importa 'include'; use: from django.urls import include, path")
+    backup(caminho)
+    caminho.write_text("\n".join(linhas) + "\n", encoding="utf-8")
+    print("   rota reuniao/ acrescentada")
+
+
+def migrar():
+    print("4) Banco de dados")
+    for comando in (["makemigrations", "reuniao"], ["migrate"]):
+        print("   python manage.py", " ".join(comando))
+        r = subprocess.run([sys.executable, "manage.py", *comando])
+        if r.returncode != 0:
+            sair("o comando acima falhou; leia a mensagem e me envie o texto completo.")
+
+
+def main():
+    if not (PASTA / "manage.py").exists() or not (PASTA / "config" / "settings.py").exists():
+        sair("rode este script dentro da pasta do projeto (onde esta o manage.py, com a pasta config).")
+    instalar_arquivos()
+    ajustar_settings()
+    ajustar_urls()
+    if "--sem-migrar" in sys.argv:
+        print("4) migracoes puladas (--sem-migrar)")
+    else:
+        migrar()
+    print()
+    print("Pronto! Rode: python manage.py runserver")
+    print("Cadastro:   http://127.0.0.1:8000/reuniao/")
+    print("Impressao:  http://127.0.0.1:8000/reuniao/impressao/")
+
+
+if __name__ == "__main__":
+    main()

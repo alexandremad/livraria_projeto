@@ -1,0 +1,22 @@
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f3f3;color:#222}
+.topo{background:#222;color:#fff;padding:10px 20px;display:flex;justify-content:space-between;align-items:center}
+.topo nav a,.topo nav .link{color:#fff;margin-left:16px;text-decoration:none;background:none;border:0;font:inherit;cursor:pointer}
+.conteudo{max-width:1100px;margin:20px auto;padding:0 16px}
+.barra{display:flex;justify-content:space-between;align-items:center}
+.btn{background:#222;color:#fff;border:0;padding:8px 14px;border-radius:4px;text-decoration:none;cursor:pointer;font-size:14px}
+.btn.perigo{background:#b00020}
+table.lista{width:100%;border-collapse:collapse;background:#fff}
+table.lista th,table.lista td{border:1px solid #ccc;padding:6px 8px;text-align:left;font-size:14px}
+table.lista th{background:#ddd}
+.acoes a{margin-right:10px}
+.msgs{list-style:none;padding:0}.msgs li{padding:8px 12px;background:#e6f4ea;border:1px solid #9c9;margin-bottom:6px}
+.msgs li.error{background:#fdecea;border-color:#c99}
+.form-simples>div{margin-bottom:10px}
+.form-simples label{display:block;font-weight:bold;font-size:13px;margin-bottom:2px}
+.form-simples input[type=text],.form-simples input[type=email],.form-simples input[type=month],.form-simples select{width:100%;max-width:420px;padding:6px}
+.form-grande{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 16px}
+.form-grande>div{margin:0 0 8px}.form-grande>button,.form-grande>a{grid-column:1/-1;justify-self:start}
+.ajuda{color:#666;font-size:13px}
+.errorlist{color:#b00020;margin:0;padding-left:16px}
+@media print{.no-print{display:none!important}}

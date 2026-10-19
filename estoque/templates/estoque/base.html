@@ -1,0 +1,27 @@
+{% load static %}<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Livraria{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'estoque/painel.css' %}">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<header class="topo no-print">
+  <strong>Controle de Estoque – Livraria</strong>
+  {% if user.is_authenticated %}
+  <nav>
+    <a href="{% url 'relatorio_lista' %}">Relatórios</a>
+    <a href="{% url 'livraria_lista' %}">Livrarias</a>
+    {% if user.is_staff %}<a href="{% url 'admin:index' %}">Admin</a>{% endif %}
+    <form method="post" action="{% url 'logout' %}" style="display:inline">{% csrf_token %}<button class="link">Sair</button></form>
+  </nav>
+  {% endif %}
+</header>
+<main class="conteudo {% block classe_main %}{% endblock %}">
+  {% if messages %}<ul class="msgs no-print">{% for m in messages %}<li class="{{ m.tags }}">{{ m }}</li>{% endfor %}</ul>{% endif %}
+  {% block conteudo %}{% endblock %}
+</main>
+</body>
+</html>

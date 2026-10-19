@@ -1,0 +1,10 @@
+{% load l10n %}<div class="lin{% if z %} z{% endif %}" data-calc data-valor="{{ it.valor_unit|unlocalize }}">
+  <span class="cod">{{ it.produto.codigo }}</span>
+  <span class="nome">{{ it.produto.nome }}</span>
+  <span><input class="q" inputmode="numeric" name="i{{ it.pk }}_ei" value="{% if not em_branco %}{{ it.estoque_inicial|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="ei"></span>
+  <span><input class="q" inputmode="numeric" name="i{{ it.pk }}_en" value="{% if not em_branco %}{{ it.entrada|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="en"></span>
+  <span><input class="q" inputmode="numeric" name="i{{ it.pk }}_tr" value="{% if not em_branco %}{{ it.transferencia|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="tr"></span>
+  <span class="val">{{ it.valor_unit|floatformat:2 }}</span>
+  <span><input class="q" inputmode="numeric" name="i{{ it.pk }}_qv" value="{% if not em_branco %}{{ it.qtd_vendas|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="qtd"></span>
+  <span class="custo" data-f="custo">{% if not em_branco and it.custo_total is not None %}{{ it.custo_total|floatformat:2 }}{% endif %}</span>
+</div>

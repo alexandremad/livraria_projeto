@@ -1,0 +1,11 @@
+{% extends "estoque/base.html" %}
+{% block titulo %}Novo relatório{% endblock %}
+{% block conteudo %}
+<h1>Novo relatório mensal</h1>
+<form method="post" class="form-simples">{% csrf_token %}
+  {{ form.as_div }}
+  <button class="btn">Criar relatório</button>
+  <a href="{% url 'relatorio_lista' %}">Cancelar</a>
+</form>
+<p class="ajuda">O cabeçalho é copiado do cadastro da livraria e todos os itens do modelo são criados com os valores atuais.</p>
+{% endblock %}

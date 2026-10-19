@@ -1,0 +1,135 @@
+/* Estilização Geral */
+body {
+    background-color: #f4f6f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: #333;
+}
+
+/* Cartão do Formulário */
+.card-cadastro {
+    border: none;
+    border-top: 5px solid #003366; /* Azul institucional */
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+}
+
+/* Cabeçalho do Formulário */
+.header-igreja {
+    text-align: center;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: 20px;
+    margin-bottom: 25px;
+}
+
+.header-igreja h2 {
+    font-weight: 700;
+    color: #003366;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.header-igreja h5 {
+    color: #cc0000; /* Vermelho institucional */
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Títulos das Seções */
+.section-title {
+    background-color: #f8f9fa;
+    border-left: 4px solid #003366;
+    padding: 8px 15px;
+    font-weight: 600;
+    color: #003366;
+    margin-top: 25px;
+    margin-bottom: 20px;
+    border-radius: 0 4px 4px 0;
+}
+
+/* Inputs e Rótulos */
+.form-label {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #495057;
+}
+
+/* Garante que nenhum input ultrapasse a largura da coluna */
+.form-control, .form-select {
+    width: 100% !important;
+    max-width: 100%;
+    box-sizing: border-box;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    padding: 8px 12px;
+    font-size: 0.95rem;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #003366;
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.15);
+}
+
+/* Ajuste dos alinhamentos de linha */
+.row {
+    margin-right: -10px;
+    margin-left: -10px;
+}
+
+.row > [class*="col-"] {
+    padding-right: 10px;
+    padding-left: 10px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #003366;
+    box-shadow: 0 0 0 0.2rem rgba(0, 51, 102, 0.15);
+}
+
+/* Estilo para Checkboxes e Radios */
+.form-check-input:checked {
+    background-color: #003366;
+    border-color: #003366;
+}
+
+.checkbox-group {
+    background-color: #fafafa;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+}
+
+/* Caixa de Alerta / Observações */
+.alert-box {
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    color: #856404;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+/* Botões */
+.btn-salvar {
+    background-color: #003366;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 12px 30px;
+    border-radius: 6px;
+    border: none;
+    transition: background-color 0.2s ease;
+}
+
+.btn-salvar:hover {
+    background-color: #002244;
+    color: #ffffff;
+}
+
+.btn-voltar {
+    background-color: #6c757d;
+    color: #ffffff;
+    font-weight: 600;
+    padding: 12px 25px;
+    border-radius: 6px;
+    border: none;
+}

@@ -1,0 +1,46 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cadastro de Participantes</title>
+    <link rel="icon" type="image/png" href="{% static 'reuniao/img/logo.png' %}">
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 30px; text-align: center; margin-top: 10px; }
+        .logo { max-width: 400px; height: auto; margin-bottom: 10px; }
+        h2 { margin-top: 0; margin-bottom: 15px; }
+        form { display: inline-block; text-align: left; }
+
+        input[type=text], select {
+            display: block; margin-bottom: 10px; width: 520px; max-width: 92vw;
+            padding: 8px; font-size: 20px; box-sizing: border-box;
+        }
+        button { width: 100%; padding: 10px; cursor: pointer; background-color: #2c3e50; color: white; border: none; font-size: 20px; }
+        .link-footer { display: block; margin-top: 15px; }
+        .ok { font-size: 18px; color: #1b6e2e; margin-bottom: 10px; }
+        .erro { color: #b00020; font-size: 16px; margin: 0 0 6px; padding: 0; list-style: none; }
+    </style>
+</head>
+<body>
+
+    <img src="{% static 'reuniao/img/horizontal_portugues.png' %}" alt="Logo" class="logo">
+
+    <h2>Cadastrar Participante</h2>
+
+    {% for m in messages %}<div class="ok">✔ {{ m }}</div>{% endfor %}
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {{ form.nome.errors }}
+        {{ form.nome }}
+        {{ form.setor.errors }}
+        {{ form.setor }}
+        <button type="submit">Salvar</button>
+    </form>
+    <br><br><br>
+
+    <a href="{% url 'reuniao_impressao' %}" class="link-footer">Ir para Lista de Impressão</a>
+
+</body>
+</html>

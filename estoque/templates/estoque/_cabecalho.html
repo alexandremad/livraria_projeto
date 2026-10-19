@@ -1,0 +1,48 @@
+<div class="cab">
+  <div class="cab-topo">
+    <div class="cab-esq">
+      <div class="logo"><span class="ig">{{ fixo.subtitulo }}</span><span class="dea">{{ fixo.igreja }}</span></div>
+      <div>{{ fixo.endereco }}</div>
+      <div>{{ fixo.cep }}</div>
+      <div>{{ fixo.conferencia }}</div>
+    </div>
+    <div class="cab-dir">
+      <div class="cel">E-MAIL: {{ fixo.email }}</div>
+      <div class="cel titulo">{{ fixo.titulo }}</div>
+      <div class="cel ref"><span>REFERENTE À:</span><b>{{ rel.referencia|date:"F"|upper }} / {{ rel.referencia|date:"Y" }}</b></div>
+      {% include "estoque/_campo.html" with label="ESTADUAL RESPONSÁVEL:" nome="estadual_responsavel" valor=rel.estadual_responsavel %}
+      <div class="cel porte"><span>PORTE:</span>
+        {% for chave, nome in portes %}<label>{{ nome|upper }}<input type="radio" name="porte" value="{{ chave }}" {% if rel.porte == chave %}checked{% endif %} {% if imprimir %}disabled{% endif %}></label>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="cab-l1">
+    {% include "estoque/_campo.html" with label="CEP:" nome="cep" valor=rel.cep max=9 %}
+    {% include "estoque/_campo.html" with label="RUA / AV.:" nome="rua" valor=rel.rua %}
+    {% include "estoque/_campo.html" with label="Nº" nome="numero" valor=rel.numero max=10 %}
+  </div>
+  <div class="cab-l2">
+    {% include "estoque/_campo.html" with label="BAIRRO:" nome="bairro" valor=rel.bairro %}
+    {% include "estoque/_campo.html" with label="CIDADE:" nome="cidade" valor=rel.cidade %}
+    {% include "estoque/_campo.html" with label="UF:" nome="uf" valor=rel.uf max=2 %}
+    {% include "estoque/_campo.html" with label="COD.: TOTVS:" nome="cod_totvs" valor=rel.cod_totvs max=30 %}
+  </div>
+  <div class="cab-l3">
+    <div class="bloco">
+      {% include "estoque/_campo.html" with label="DIRIGENTE:" nome="dirigente" valor=rel.dirigente %}
+      {% include "estoque/_campo.html" with label="TEL.:" nome="dirigente_tel" valor=rel.dirigente_tel max=30 %}
+      {% include "estoque/_campo.html" with label="E-MAIL:" nome="dirigente_email" valor=rel.dirigente_email %}
+    </div>
+    <div class="bloco">
+      {% include "estoque/_campo.html" with label="VOL. ESTOQUE LIVRARIA:" nome="vol_estoque" valor=rel.vol_estoque %}
+      {% include "estoque/_campo.html" with label="TEL.:" nome="vol_estoque_tel" valor=rel.vol_estoque_tel max=30 %}
+      {% include "estoque/_campo.html" with label="E-MAIL:" nome="vol_estoque_email" valor=rel.vol_estoque_email %}
+    </div>
+    <div class="bloco">
+      {% include "estoque/_campo.html" with label="VOL. FINANCEIRA:" nome="vol_financeiro" valor=rel.vol_financeiro %}
+      {% include "estoque/_campo.html" with label="TEL.:" nome="vol_financeiro_tel" valor=rel.vol_financeiro_tel max=30 %}
+      {% include "estoque/_campo.html" with label="E-MAIL:" nome="vol_financeiro_email" valor=rel.vol_financeiro_email %}
+    </div>
+  </div>
+  <div class="aviso">{{ fixo.aviso }}</div>
+</div>

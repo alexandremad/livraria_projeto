@@ -1,0 +1,11 @@
+{% extends "estoque/base.html" %}
+{% block titulo %}Livraria{% endblock %}
+{% block conteudo %}
+<h1>{% if object %}Editar livraria{% else %}Nova livraria{% endif %}</h1>
+<form method="post" class="form-simples form-grande">{% csrf_token %}
+  {{ form.as_div }}
+  <button class="btn">Salvar</button>
+  <a href="{% url 'livraria_lista' %}">Cancelar</a>
+</form>
+<p class="ajuda">Para cadastrar uma livraria auxiliar, escolha a livraria principal no campo correspondente.</p>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends "estoque/base.html" %}
+{% load static %}
+{% block titulo %}Relatório {{ rel }}{% endblock %}
+{% block classe_main %}folha-main{% endblock %}
+{% block extra_head %}<link rel="stylesheet" href="{% static 'estoque/folha.css' %}">{% endblock %}
+{% block conteudo %}
+<form method="post" id="folha" {% if imprimir %}onsubmit="return false"{% endif %} autocomplete="off">
+  {% csrf_token %}
+  {% if not imprimir %}
+  <div class="barra-acoes no-print">
+    <span>{{ rel }}</span>
+    <button class="btn" type="submit">Salvar</button>
+    <a class="btn" href="{% url 'relatorio_imprimir' rel.pk %}" target="_blank">Imprimir (salve antes)</a>
+    <a class="btn" href="{% url 'relatorio_lista' %}">Voltar</a>
+  </div>
+  {% else %}
+  <div class="barra-acoes no-print">
+    <button class="btn" type="button" onclick="window.print()">Imprimir</button>
+    <span>Imprima em A4, retrato, margens "Nenhuma" e escala 100%.</span>
+  </div>
+  {% endif %}
+
+  {% for pagina in paginas %}
+  <section class="pagina{% if pagina.numero != 1 %} sem-cab{% endif %}">
+    {% if pagina.numero == 1 %}{% include "estoque/_cabecalho.html" %}{% endif %}
+    <div class="colunas">
+      {% for col in pagina.colunas %}
+      <div class="coluna" data-coluna>
+        {% for bloco in col.blocos %}
+          {% include "estoque/_hdr.html" with titulo=bloco.secao.titulo %}
+          {% for it in bloco.itens %}
+            {% include "estoque/_item.html" with z=forloop.counter|divisibleby:2 %}
+          {% endfor %}
+        {% endfor %}
+        {% if col.livres_cabecalho %}
+          <div class="espaco">ESPAÇO PARA NOVOS ITENS</div>
+          {% include "estoque/_hdr.html" with titulo="ITENS" %}
+        {% endif %}
+        {% for l in col.livres %}
+          {% include "estoque/_livre.html" with z=forloop.counter|divisibleby:2 %}
+        {% endfor %}
+        <div class="tot"><span class="rot">TOTAL</span>
+          <span class="cx" data-f="tot-qtd">{% if not em_branco and col.total_qtd %}{{ col.total_qtd }}{% endif %}</span>
+          <span class="cx" data-f="tot-custo">{% if not em_branco and col.total_custo %}{{ col.total_custo|floatformat:2 }}{% endif %}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+  {% endfor %}
+</form>
+<script src="{% static 'estoque/folha.js' %}"></script>
+{% if imprimir %}<script>window.addEventListener('load',function(){setTimeout(function(){window.print()},400)})</script>{% endif %}
+{% endblock %}

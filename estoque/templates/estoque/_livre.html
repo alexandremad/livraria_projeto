@@ -1,0 +1,10 @@
+<div class="lin{% if z %} z{% endif %}" data-calc>
+  <span><input class="q" name="l{{ l.pk }}_cod" value="{% if not em_branco %}{{ l.codigo }}{% endif %}" maxlength="10" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+  <span><input class="q esq" name="l{{ l.pk }}_nome" value="{% if not em_branco %}{{ l.nome }}{% endif %}" maxlength="120" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+  <span><input class="q" inputmode="numeric" name="l{{ l.pk }}_ei" value="{% if not em_branco %}{{ l.estoque_inicial|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="ei"></span>
+  <span><input class="q" inputmode="numeric" name="l{{ l.pk }}_en" value="{% if not em_branco %}{{ l.entrada|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="en"></span>
+  <span><input class="q" inputmode="numeric" name="l{{ l.pk }}_tr" value="{% if not em_branco %}{{ l.transferencia|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="tr"></span>
+  <span><input class="q" inputmode="decimal" name="l{{ l.pk }}_val" value="{% if not em_branco and l.valor_unit is not None %}{{ l.valor_unit|floatformat:2 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="valor"></span>
+  <span><input class="q" inputmode="numeric" name="l{{ l.pk }}_qv" value="{% if not em_branco %}{{ l.qtd_vendas|default_if_none:'' }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %} data-f="qtd"></span>
+  <span class="custo" data-f="custo">{% if not em_branco and l.custo_total is not None %}{{ l.custo_total|floatformat:2 }}{% endif %}</span>
+</div>
