@@ -1,4 +1,4 @@
-{% load static %}
+{% load static formatos %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -187,7 +187,7 @@
             </div>
             <div class="col-3">
                 <div class="data-label">CPF</div>
-                <div class="data-value">{{ membro.cpf }}</div>
+                <div class="data-value">{{ membro.cpf|cpf }}</div>
             </div>
         </div>
 
@@ -212,11 +212,11 @@
             </div>
             <div class="col-4">
                 <div class="data-label">Celular</div>
-                <div class="data-value">{{ membro.celular }}</div>
+                <div class="data-value">{{ membro.celular|telefone }}</div>
             </div>
             <div class="col-4">
                 <div class="data-label">Contato Emergência</div>
-                <div class="data-value">{{ membro.nome_contato|default:"-" }} ({{ membro.celular_contato|default:"-" }})</div>
+                <div class="data-value">{{ membro.nome_contato|default:"-" }} ({{ membro.celular_contato|telefone|default:"-" }})</div>
             </div>
             <div class="col-6">
                 <div class="data-label">E-mail</div>
@@ -249,7 +249,7 @@
             </div>
             <div class="col-4">
                 <div class="data-label">Contato dos Filhos</div>
-                <div class="data-value">{{ membro.celular_filho|default:"-" }}</div>
+                <div class="data-value">{{ membro.celular_filho|telefone|default:"-" }}</div>
             </div>
             <div class="col-4">
                 <div class="data-label">Possui Doença / Med. Controlado?</div>

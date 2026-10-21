@@ -7,6 +7,7 @@ from PIL import Image, ImageOps
 from pillow_heif import register_heif_opener
 
 from .models import Membro
+from .validadores import SomenteNumerosMixin
 
 # Permite abrir fotos HEIC (iPhone) além de JPEG, PNG, WebP etc.
 register_heif_opener()
@@ -22,7 +23,7 @@ DIAS_SEMANA = [
 ]
 
 
-class MembroForm(forms.ModelForm):
+class MembroForm(SomenteNumerosMixin, forms.ModelForm):
     dias_culto_checkboxes = forms.MultipleChoiceField(
         choices=DIAS_SEMANA,
         widget=forms.CheckboxSelectMultiple(attrs={'class': 'form-check-input'}),
