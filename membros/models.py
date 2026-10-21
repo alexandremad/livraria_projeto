@@ -89,6 +89,7 @@ class Membro(models.Model):
     doc_comprovante_residencia = models.FileField("Comprovante de Endereço", upload_to='documentos/enderecos/', blank=True, null=True)
     doc_certidao_nascimento = models.FileField("Certidão de Nascimento", upload_to='documentos/certidoes/', blank=True, null=True)
     doc_certidao_casamento = models.FileField("Certidão de Casamento", upload_to='documentos/certidoes/', blank=True, null=True)
+    doc_curso_cfo = models.FileField("Curso CFO", upload_to='documentos/cfo/', blank=True, null=True)
 
     data_cadastro = models.DateTimeField(auto_now_add=True)
 

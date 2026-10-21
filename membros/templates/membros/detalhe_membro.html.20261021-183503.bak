@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha de Membro - {{ membro.nome }}</title>
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'membros/css/style.css' %}">
+
+    <style>
+        .data-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+        }
+        .data-value {
+            font-size: 0.98rem;
+            color: #111;
+            font-weight: 500;
+            border-bottom: 1px dotted #ccc;
+            padding-bottom: 2px;
+            word-break: break-word;
+        }
+
+        /* Estilo da Foto 3x4 na Ficha */
+        .foto-membro-container {
+            width: 3cm;
+            height: 4cm;
+            border: 2px solid #003366;
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            text-align: center;
+            font-size: 0.75rem;
+            color: #777;
+            border-radius: 4px;
+        }
+        .foto-membro-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- REGRAS ESPECÍFICAS DE IMPRESSÃO --- */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 10mm 15mm;
+            }
+
+            /* Esconde botões e navegação */
+            .no-print {
+                display: none !important;
+            }
+
+            /* Reseta containers */
+            body {
+                background-color: #fff !important;
+                color: #000 !important;
+                font-size: 10pt;
+            }
+            .container {
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+            .card-cadastro {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+            }
+
+            /* Alinhamento do cabeçalho */
+            .header-igreja img.logo-igreja {
+                width: 70px !important;
+                height: auto !important;
+            }
+            .header-igreja h2 {
+                font-size: 15pt !important;
+                margin-top: 5px;
+            }
+            .header-igreja h5 {
+                font-size: 11pt !important;
+            }
+
+            /* Impede que seções e blocos sejam cortados ao meio */
+            .section-title {
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                border-left: 4px solid #003366 !important;
+                padding: 3px 6px !important;
+                font-size: 9.5pt !important;
+                font-weight: bold;
+                margin-top: 10px !important;
+                margin-bottom: 6px !important;
+                break-after: avoid;
+            }
+
+            .row {
+                break-inside: avoid;
+            }
+
+            /* Não exibe URLs ao lado dos links impressos */
+            a[href]:after {
+                content: "" !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container my-4">
+    <!-- Botões de Ação Topo (Não saem na impressão) -->
+    <div class="d-flex justify-content-between mb-4 no-print">
+        <a href="{% url 'home' %}" class="btn btn-secondary">← Voltar para Lista</a>
+        <div>
+            <button onclick="window.print()" class="btn btn-dark me-2">🖨️ Imprimir Ficha</button>
+            <a href="{% url 'editar_membro' membro.id %}" class="btn btn-warning">✏️ Editar Dados</a>
+        </div>
+    </div>
+
+    <div class="card card-cadastro p-4 p-md-4">
+
+        <!-- Cabeçalho com Logo e Espaço para Foto 3x4 -->
+        <div class="row align-items-center mb-3">
+            <div class="col-2 text-start">
+                <img src="{% static 'membros/img/Logo.png' %}" alt="Logotipo" width="75" height="75" class="logo-igreja">
+            </div>
+            <div class="col-8 text-center header-igreja">
+                <h2 class="fw-bold mb-1" style="color: #003366; font-size: 1.35rem;">IGREJA PENTECOSTAL DEUS É AMOR</h2>
+                <h5 class="fw-semibold text-danger m-0" style="font-size: 1rem;">FICHA DE CADASTRO DE MEMBRO</h5>
+            </div>
+            <div class="col-2 d-flex justify-content-end">
+                <!-- Bloco da Foto 3x4 -->
+                <div class="foto-membro-container shadow-sm">
+                    {% if membro.foto %}
+                        <img src="{{ membro.foto.url }}" alt="Foto 3x4 de {{ membro.nome }}">
+                    {% else %}
+                        <span>Foto<br>3x4</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Dados Pessoais -->
+        <div class="section-title">1. DADOS PESSOAIS</div>
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="data-label">Nome Completo</div>
+                <div class="data-value">{{ membro.nome }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Sexo</div>
+                <div class="data-value">{{ membro.get_sexo_display }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Estado Civil</div>
+                <div class="data-value">{{ membro.get_estado_civil_display }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Data de Nascimento</div>
+                <div class="data-value">{{ membro.data_nascimento|date:"d/m/Y" }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Naturalidade</div>
+                <div class="data-value">{{ membro.naturalidade }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Nacionalidade</div>
+                <div class="data-value">{{ membro.nacionalidade }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Profissão</div>
+                <div class="data-value">{{ membro.profissao|default:"-" }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">RG</div>
+                <div class="data-value">{{ membro.rg }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">CPF</div>
+                <div class="data-value">{{ membro.cpf }}</div>
+            </div>
+        </div>
+
+        <!-- 2. Endereço e Contato -->
+        <div class="section-title">2. ENDEREÇO E CONTATO</div>
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="data-label">Endereço</div>
+                <div class="data-value">{{ membro.endereco }}, {{ membro.numero }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">Bairro</div>
+                <div class="data-value">{{ membro.bairro }}</div>
+            </div>
+            <div class="col-3">
+                <div class="data-label">CEP</div>
+                <div class="data-value">{{ membro.cep }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Cidade / UF</div>
+                <div class="data-value">{{ membro.cidade }} / {{ membro.estado }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Celular</div>
+                <div class="data-value">{{ membro.celular }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Contato Emergência</div>
+                <div class="data-value">{{ membro.nome_contato|default:"-" }} ({{ membro.celular_contato|default:"-" }})</div>
+            </div>
+            <div class="col-6">
+                <div class="data-label">E-mail</div>
+                <div class="data-value">{{ membro.email|default:"-" }}</div>
+            </div>
+        </div>
+
+        <!-- 3. Dados Familiares e Saúde -->
+        <div class="section-title">3. DADOS FAMILIARES E SAÚDE</div>
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="data-label">Nome do Pai</div>
+                <div class="data-value">{{ membro.nome_pai|default:"-" }}</div>
+            </div>
+            <div class="col-6">
+                <div class="data-label">Nome da Mãe</div>
+                <div class="data-value">{{ membro.nome_mae|default:"-" }}</div>
+            </div>
+            <div class="col-8">
+                <div class="data-label">Cônjuge</div>
+                <div class="data-value">{{ membro.nome_conjuge|default:"-" }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Data de Casamento</div>
+                <div class="data-value">{{ membro.data_casamento|date:"d/m/Y"|default:"-" }}</div>
+            </div>
+            <div class="col-8">
+                <div class="data-label">Filhos</div>
+                <div class="data-value">{{ membro.nome_filhos|default:"-" }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Contato dos Filhos</div>
+                <div class="data-value">{{ membro.celular_filho|default:"-" }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Possui Doença / Med. Controlado?</div>
+                <div class="data-value">{% if membro.possui_doenca %}Sim{% else %}Não{% endif %}</div>
+            </div>
+            <div class="col-8">
+                <div class="data-label">Qual doença/medicação?</div>
+                <div class="data-value">{{ membro.qual_doenca|default:"-" }}</div>
+            </div>
+        </div>
+
+        <!-- 4. Vida Ministerial -->
+        <div class="section-title">4. VIDA MINISTERIAL E DISPONIBILIDADE</div>
+        <div class="row g-2">
+            <div class="col-4">
+                <div class="data-label">Função Ministerial</div>
+                <div class="data-value">{{ membro.get_funcao_ministerial_display|default:membro.funcao_ministerial|default:"-" }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Data de Batismo</div>
+                <div class="data-value">{{ membro.data_batismo|date:"d/m/Y"|default:"-" }}</div>
+            </div>
+            <div class="col-4">
+                <div class="data-label">Líder de Departamento?</div>
+                <div class="data-value">{% if membro.lider_departamento %}Sim ({{ membro.qual_departamento }}){% else %}Não{% endif %}</div>
+            </div>
+            <div class="col-12">
+                <div class="data-label">Dias que frequenta o culto</div>
+                <div class="data-value">{{ membro.dias_culto|default:"-" }}</div>
+            </div>
+            <div class="col-12">
+                <div class="data-label">Apoio em Escalas</div>
+                <div class="data-value">{{ membro.periodo_apoio|default:"-" }}</div>
+            </div>
+            <div class="col-12">
+                <div class="data-label">Observações</div>
+                <div class="data-value">{{ membro.observacoes|default:"-" }}</div>
+            </div>
+        </div>
+
+        <!-- 5. Documentos Anexados (agora com link para abrir o arquivo) -->
+        <div class="section-title">5. DOCUMENTOS ANEXADOS</div>
+        <div class="row g-2">
+            <div class="col-6">
+                <div class="data-label">CPF e RG</div>
+                <div class="data-value">
+                    {% if membro.doc_cpf_rg %}<a href="{{ membro.doc_cpf_rg.url }}" target="_blank">Anexado (abrir)</a>{% else %}Não anexado{% endif %}
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="data-label">Comprovante de Endereço</div>
+                <div class="data-value">
+                    {% if membro.doc_comprovante_residencia %}<a href="{{ membro.doc_comprovante_residencia.url }}" target="_blank">Anexado (abrir)</a>{% else %}Não anexado{% endif %}
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="data-label">Certidão de Nascimento</div>
+                <div class="data-value">
+                    {% if membro.doc_certidao_nascimento %}<a href="{{ membro.doc_certidao_nascimento.url }}" target="_blank">Anexado (abrir)</a>{% else %}Não anexado{% endif %}
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="data-label">Certidão de Casamento</div>
+                <div class="data-value">
+                    {% if membro.doc_certidao_casamento %}<a href="{{ membro.doc_certidao_casamento.url }}" target="_blank">Anexado (abrir)</a>{% else %}Não anexado{% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+</body>
+</html>
