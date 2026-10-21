@@ -41,6 +41,7 @@ Roda no navegador, então funciona em qualquer sistema operacional (Mac, Windows
 - Impressão fiel ao papel e opção de **imprimir em branco**, para preencher à mão.
 - O valor de cada produto fica guardado no relatório, então mudar um preço depois não altera os relatórios antigos.
 - Atalho no preenchimento: a tecla **Enter** desce para a linha de baixo.
+- **Ficha Diária** (`/ficha/<número do relatório>/`): a quarta folha do relatório, com a abertura do cofre (data, valor e 5 testemunhas, em 12 linhas), observações (8 linhas), valor total em relatório (soma automática do valor, editável), instruções, contatos e contas bancárias. Tudo editável, com impressão em 1 folha A4 e opção de imprimir em branco. Abra pelo botão **Ficha diária** na lista de relatórios ou dentro da folha.
 
 ### Cadastro de Membros (tela inicial → *Lista de Membros*)
 
@@ -84,6 +85,7 @@ livraria_projeto/
 │   └── urls.py
 ├── estoque/                    # livraria: relatório mensal, livrarias, tela inicial
 ├── membros/                    # cadastro de membros
+├── ficha_diaria/               # ficha diária do relatório mensal da livraria
 ├── reuniao/                    # lista de presença
 │   └── static/reuniao/img/     # logo.png e horizontal_portugues.png
 ├── juntar_bancos.py            # utilitário para juntar dois bancos SQLite
@@ -129,7 +131,7 @@ Requisitos: **Python 3.12+** (python.org). No Windows, marque *Add Python to PAT
 4. Crie as tabelas do banco:
 
    ```bash
-   python manage.py makemigrations estoque membros reuniao
+   python manage.py makemigrations estoque membros reuniao ficha_diaria
    python manage.py migrate
    ```
 
@@ -161,6 +163,7 @@ Requisitos: **Python 3.12+** (python.org). No Windows, marque *Add Python to PAT
 | --- | --- |
 | `/` | Tela inicial, com os atalhos dos módulos |
 | `/livraria/` | Relatórios mensais e livrarias |
+| `/ficha/<nº do relatório>/` | Ficha diária de um relatório (pelo botão **Ficha diária**) |
 | `/home/` | Lista de membros |
 | `/reuniao/` | Cadastro de participantes da reunião |
 | `/reuniao/impressao/` | Lista de presença de hoje (ou `?data_reuniao=AAAA-MM-DD`) |
@@ -271,6 +274,8 @@ O projeto vem configurado para **uso local e de teste**. Antes de usar com dados
 | Produtos e seções do modelo físico | `estoque/dados_modelo.py` e depois `python manage.py carregar_produtos` |
 | Linhas em branco e textos fixos do cabeçalho do relatório | `estoque/constantes.py` |
 | Visual e impressão da folha da livraria | `estoque/static/estoque/folha.css` |
+| Textos, contas bancárias e versículo da ficha diária | `ficha_diaria/conteudo.py` |
+| Número de linhas da ficha diária | `LINHAS_TABELA` e `LINHAS_OBSERVACOES` em `ficha_diaria/views.py` |
 | Regiões da lista de presença | `reuniao/regioes.py` |
 | Logos da lista de presença | `reuniao/static/reuniao/img/` |
 | Fuso horário e idioma | `config/settings.py` (`TIME_ZONE`, `LANGUAGE_CODE`) |

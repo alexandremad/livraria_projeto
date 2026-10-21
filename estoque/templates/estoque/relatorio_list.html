@@ -13,6 +13,7 @@
     <td class="acoes">
       <a href="{% url 'relatorio_folha' r.pk %}">Abrir / preencher</a>
       <a href="{% url 'relatorio_imprimir' r.pk %}" target="_blank">Imprimir</a>
+      <a href="{% url 'ficha_editar' r.pk %}">Ficha diária</a>
       <a href="{% url 'relatorio_imprimir' r.pk %}?em_branco=1" target="_blank">Imprimir em branco</a>
       <a href="{% url 'relatorio_excluir' r.pk %}">Excluir</a>
     </td>

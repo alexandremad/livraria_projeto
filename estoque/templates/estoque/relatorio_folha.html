@@ -11,6 +11,7 @@
     <span>{{ rel }}</span>
     <button class="btn" type="submit">Salvar</button>
     <a class="btn" href="{% url 'relatorio_imprimir' rel.pk %}" target="_blank">Imprimir (salve antes)</a>
+    <a class="btn" href="{% url 'ficha_editar' rel.pk %}">Ficha diária</a>
     <a class="btn" href="{% url 'relatorio_lista' %}">Voltar</a>
   </div>
   {% else %}

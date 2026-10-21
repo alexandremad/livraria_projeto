@@ -1,0 +1,113 @@
+{% load static %}<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ficha Diária – {{ rel }}</title>
+  <link rel="stylesheet" href="{% static 'ficha_diaria/ficha.css' %}">
+</head>
+<body>
+<form method="post" id="ficha" autocomplete="off" {% if imprimir %}onsubmit="return false"{% endif %}>
+  {% csrf_token %}
+
+  <div class="barra-acoes no-print">
+    <span>Ficha diária – {{ rel }}</span>
+    {% if imprimir %}
+      <button class="btn" type="button" onclick="window.print()">Imprimir</button>
+      <a class="btn" href="{% url 'ficha_editar' rel.pk %}">Voltar à ficha</a>
+      <span>A4, retrato, margens "Nenhuma", escala 100%.</span>
+    {% else %}
+      <button class="btn" type="submit">Salvar</button>
+      <a class="btn" href="{% url 'ficha_imprimir' rel.pk %}" target="_blank">Imprimir (salve antes)</a>
+      <a class="btn" href="{% url 'ficha_imprimir' rel.pk %}?em_branco=1" target="_blank">Imprimir em branco</a>
+      <a class="btn" href="{% url 'relatorio_folha' rel.pk %}">Voltar ao relatório</a>
+    {% endif %}
+  </div>
+  {% if messages %}<ul class="msgs no-print">{% for m in messages %}<li>{{ m }}</li>{% endfor %}</ul>{% endif %}
+
+  <section class="pagina">
+
+    <div class="titulo">FICHA DIÁRIA - RELATÓRIO MENSAL DE LIVRARIA</div>
+
+    <!-- Tabela de abertura do cofre -->
+    <div class="lin cab">
+      <span>DATA DE ABERTURA<br>DO COFRE</span>
+      <span>VALOR</span>
+      <span>NOME<br>TESTEMUNHA 1</span>
+      <span>NOME<br>TESTEMUNHA 2</span>
+      <span>NOME<br>TESTEMUNHA 3</span>
+      <span>NOME<br>TESTEMUNHA 4</span>
+      <span>NOME<br>TESTEMUNHA 5</span>
+    </div>
+    <div class="corpo-tabela">
+      {% for l in linhas %}
+      <div class="lin{% if forloop.counter|divisibleby:2 %} z{% endif %}">
+        <span><input class="q" name="l{{ l.pk }}_data" data-c="data" maxlength="20" value="{% if not em_branco %}{{ l.data_abertura }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+        <span><input class="q" name="l{{ l.pk }}_valor" data-c="valor" data-f="valor" inputmode="decimal" value="{% if not em_branco and l.valor is not None %}{{ l.valor|floatformat:2 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+        <span><input class="q" name="l{{ l.pk }}_t1" data-c="t1" maxlength="100" value="{% if not em_branco %}{{ l.testemunha_1 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+        <span><input class="q" name="l{{ l.pk }}_t2" data-c="t2" maxlength="100" value="{% if not em_branco %}{{ l.testemunha_2 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+        <span><input class="q" name="l{{ l.pk }}_t3" data-c="t3" maxlength="100" value="{% if not em_branco %}{{ l.testemunha_3 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+        <span><input class="q" name="l{{ l.pk }}_t4" data-c="t4" maxlength="100" value="{% if not em_branco %}{{ l.testemunha_4 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+        <span><input class="q" name="l{{ l.pk }}_t5" data-c="t5" maxlength="100" value="{% if not em_branco %}{{ l.testemunha_5 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></span>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Observações -->
+    <div class="sec-titulo">OBSERVAÇÕES</div>
+    <div class="corpo-obs">
+      {% for o in obs %}
+      <div class="obs{% if forloop.counter|divisibleby:2 %} z{% endif %}">
+        <input class="q esq" name="obs_{{ o.n }}" data-c="obs" maxlength="200" value="{% if not em_branco %}{{ o.texto }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Valor total -->
+    <div class="total">
+      <div class="rotulo">VALOR TOTAL EM RELATÓRIO:</div>
+      <div class="valor"><input class="q esq" id="valor_total" name="valor_total" inputmode="decimal" value="{% if not em_branco and total is not None %}{{ total|floatformat:2 }}{% endif %}" {% if imprimir %}readonly tabindex="-1"{% endif %}></div>
+    </div>
+
+    <!-- Instruções -->
+    <div class="sec-titulo">INSTRUÇÕES:</div>
+    <div class="instrucoes">
+      <p>1- Este relatório não pode conter rasuras.</p>
+      <p>2- Após o fechamento pela voluntária de estoque dos materiais evangelísticos, para melhor organização e controle, é importante realizar a contagem de estoque dos materiais.</p>
+      <p class="sub forte">3- Após preenchido o relatório pela vol. de estoque, o mesmo deve ser entregue à voluntária financeira para que seja realizado o preenchimento do relatório on-line de livraria, juntamente com o relatório on-line financeiro.</p>
+      <p>4- O Envio deste relatório deve ser até o dia 03 de cada mês, <u>via e-mail</u> juntamente com as OCTs em caso de venda, e demais documentos.</p>
+      <p class="sub">5- CASO NÃO HAJA VENDAS, O RELATÓRIO DEVERÁ SER PREENCHIDO, POIS O ESTOQUE DEVERÁ SER INFORMADO MENSALMENTE.</p>
+    </div>
+
+    <!-- Contato -->
+    <div class="pedidos">Para realização de pedidos e devoluções de materiais de livraria, entrar em contato com o setor de Logística</div>
+    <div class="contato">
+      <span class="icone">&#9742;</span><span class="txt">{{ contato.telefone }}</span>
+      <span class="icone">&#9993;</span><span class="txt">{{ contato.email }}</span>
+    </div>
+
+    <!-- Contas bancárias -->
+    <div class="igreja">{{ igreja }}</div>
+    <div class="bancos">
+      {% for b in bancos %}
+      <div class="banco">
+        <div class="logo-banco">{{ b.logo }}</div>
+        <div class="dados-banco">
+          <span class="peq">Favorecido:</span>
+          <span>{{ favorecido }}</span>
+          <span class="peq">{{ b.nome }}</span>
+          <span class="peq">Agência: {{ b.agencia }}</span>
+          <span class="peq">Conta: {{ b.conta }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="versiculo">{{ versiculo }}</div>
+  </section>
+</form>
+
+<script src="{% static 'ficha_diaria/ficha.js' %}"></script>
+{% if imprimir %}<script>window.addEventListener('load', function () { setTimeout(function () { window.print(); }, 400); });</script>{% endif %}
+</body>
+</html>

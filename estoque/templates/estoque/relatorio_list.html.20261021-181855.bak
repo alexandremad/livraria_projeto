@@ -1,0 +1,22 @@
+{% extends "estoque/base.html" %}
+{% block titulo %}Relatórios{% endblock %}
+{% block conteudo %}
+<div class="barra"><h1>Relatórios mensais</h1><a class="btn" href="{% url 'relatorio_novo' %}">+ Novo relatório</a>
+  <a class="btn" href="{% url 'inicio' %}">Inicio</a></div>
+<table class="lista">
+  <tr><th>Referente a</th><th>Livraria</th><th>Atualizado em</th><th></th></tr>
+  {% for r in object_list %}
+  <tr>
+    <td>{{ r.referencia|date:"m/Y" }}</td>
+    <td>{{ r.livraria }}</td>
+    <td>{{ r.atualizado_em|date:"d/m/Y H:i" }}</td>
+    <td class="acoes">
+      <a href="{% url 'relatorio_folha' r.pk %}">Abrir / preencher</a>
+      <a href="{% url 'relatorio_imprimir' r.pk %}" target="_blank">Imprimir</a>
+      <a href="{% url 'relatorio_imprimir' r.pk %}?em_branco=1" target="_blank">Imprimir em branco</a>
+      <a href="{% url 'relatorio_excluir' r.pk %}">Excluir</a>
+    </td>
+  </tr>
+  {% empty %}<tr><td colspan="4">Nenhum relatório ainda.</td></tr>{% endfor %}
+</table>
+{% endblock %}

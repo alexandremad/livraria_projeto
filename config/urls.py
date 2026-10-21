@@ -23,6 +23,7 @@ urlpatterns = [
     
     # Apps do Sistema
     path("livraria/", include("estoque.urls")),
+    path('ficha/', include('ficha_diaria.urls')),
     path("", include("membros.urls")), 
     path("reuniao/", include("reuniao.urls")),
 ]

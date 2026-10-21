@@ -1,0 +1,83 @@
+/* Ficha diária – A4 retrato, uma folha, fiel ao modelo de papel */
+@page { size: A4 portrait; margin: 0; }
+* { box-sizing: border-box; }
+body { margin: 0; background: #e5e5e5; font-family: Arial, Helvetica, sans-serif; color: #000; }
+
+.barra-acoes { position: sticky; top: 0; z-index: 10; background: #222; color: #fff; padding: 8px;
+  display: flex; gap: 10px; justify-content: center; align-items: center; flex-wrap: wrap; font-size: 13px; }
+.barra-acoes .btn { background: #fff; color: #222; border: 0; padding: 7px 12px; border-radius: 4px;
+  text-decoration: none; cursor: pointer; font-size: 13px; }
+.msgs { list-style: none; margin: 8px auto; padding: 0; max-width: 210mm; }
+.msgs li { background: #e6f4ea; border: 1px solid #9c9; padding: 8px 12px; }
+
+.pagina { width: 210mm; height: 296mm; margin: 10px auto; padding: 5mm; background: #fff;
+  box-shadow: 0 0 6px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden;
+  break-after: auto; }
+.pagina > * { flex: none; }
+
+.titulo, .sec-titulo, .pedidos, .igreja, .versiculo { text-align: center; font-weight: bold; background: #cfcfd2;
+  border: .35mm solid #000; }
+.titulo { font-size: 12pt; padding: 1.6mm 0; }
+
+/* tabela */
+.lin { display: grid;
+  grid-template-columns: minmax(0,17fr) minmax(0,11fr) repeat(5, minmax(0,14.4fr)); min-height: 0; }
+.lin > span { border-right: .3mm solid #000; border-bottom: .3mm solid #000; display: flex;
+  align-items: center; min-width: 0; overflow: hidden; }
+.lin > span:first-child { border-left: .35mm solid #000; }
+.lin > span:last-child { border-right: .35mm solid #000; }
+.lin.cab { background: #cfcfd2; font-weight: bold; font-size: 8.5pt; text-align: center; line-height: 1.25; height: 11mm; }
+.lin.cab > span { justify-content: center; }
+.corpo-tabela { flex: 12 1 0; display: grid; grid-auto-rows: 1fr; min-height: 0; }
+.lin.z { background: #cfcfd2; }
+
+.q { width: 100%; height: 100%; border: 0; background: transparent; font: inherit; font-size: 8.5pt;
+  text-align: center; padding: 0 1mm; margin: 0; color: #000; }
+.q.esq { text-align: left; padding-left: 2mm; }
+.q:focus { outline: .4mm solid #1a73e8; outline-offset: -.4mm; background: #fffbe0; }
+.q[readonly] { pointer-events: none; }
+
+/* observações */
+.sec-titulo { font-size: 11pt; padding: 1mm 0; border-top: 0; }
+.corpo-obs { flex: 8 1 0; display: grid; grid-auto-rows: 1fr; min-height: 0;
+  border-left: .35mm solid #000; border-right: .35mm solid #000; }
+.obs { border-bottom: .3mm solid #000; min-height: 0; }
+.obs.z { background: #cfcfd2; }
+
+/* valor total */
+.total { display: grid; grid-template-columns: 42fr 58fr; height: 12mm; border: .35mm solid #000; border-top: 0; }
+.total .rotulo { background: #cfcfd2; font-weight: bold; font-size: 12pt; display: flex; align-items: center;
+  justify-content: center; border-right: .35mm solid #000; }
+.total .valor { background: #fff; }
+.total .q { font-size: 12pt; font-weight: bold; }
+
+/* instruções */
+.instrucoes { border: .35mm solid #000; border-top: 0; font-size: 7.4pt; font-weight: bold; }
+.instrucoes p { margin: 0; padding: .8mm 1mm; border-bottom: .25mm solid #000; line-height: 1.25; }
+.instrucoes p:last-child { border-bottom: 0; }
+.instrucoes .sub { text-decoration: underline; }
+.instrucoes .forte { font-size: 8.4pt; }
+.pedidos { background: #fff; font-weight: normal; font-size: 9.5pt; padding: 1.6mm 0; border-top: .35mm solid #000; }
+.contato { display: flex; align-items: center; gap: 3mm; padding: 1.2mm 14mm; border: .35mm solid #000; border-top: 0;
+  font-size: 10pt; }
+.contato .icone { background: #7b7b7b; color: #fff; width: 9mm; height: 6.5mm; display: inline-flex; align-items: center;
+  justify-content: center; border-radius: 1.2mm; font-size: 11pt; }
+.contato .txt { margin-right: 22mm; }
+
+/* contas bancárias */
+.igreja { background: #fff; font-size: 12pt; padding: 1.2mm 0; border-top: 0; letter-spacing: .2pt; }
+.bancos { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 6mm; padding: 3mm 8mm;
+  border: .35mm solid #000; border-top: 0; font-size: 7pt; color: #444; }
+.banco { display: flex; gap: 4mm; align-items: center; min-height: 17mm; }
+.logo-banco { flex: none; width: 24mm; height: 12mm; background: #4a4a4a; color: #fff; font-weight: bold;
+  font-size: 7pt; display: flex; align-items: center; justify-content: center; text-align: center;
+  padding: 1mm; border-radius: .8mm; outline: .3mm solid #e2e2e2; outline-offset: 1.2mm; }
+.dados-banco { display: flex; flex-direction: column; line-height: 1.45; }
+.dados-banco .peq { color: #666; font-size: 6.6pt; }
+.versiculo { font-size: 8pt; padding: 2.4mm 2mm; border-top: 0; margin-top: auto; }
+
+@media print {
+  body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .pagina { margin: 0; box-shadow: none; }
+  .no-print { display: none !important; }
+}

@@ -17,7 +17,7 @@ INSTALLED_APPS = [
     "estoque",
     "membros",
     "reuniao",
-    
+    "ficha_diaria",
 ]
 
 MIDDLEWARE = [
