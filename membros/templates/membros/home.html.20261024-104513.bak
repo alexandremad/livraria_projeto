@@ -1,0 +1,55 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Membros</title>
+     <!-- Bootstrap 5 CSS -->
+     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+     <!-- CSS Customizado -->
+     <link rel="stylesheet" href="{% static 'membros/css/style.css' %}">
+</head>
+<body>
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card card-cadastro p-4 p-md-5">
+    <div class="header-igreja">
+        <img src="{% static 'membros/img/Logo.png' %}" alt="Logotipo da aplicação" width="110" height="110">
+        <h2>IGREJA PENTECOSTAL DEUS É AMOR</h2>
+        <h5>Lista de Membros</h5>
+    </div>
+    
+    <a href="{% url 'cadastrar_membro' %}" class="btn btn-voltar">Cadastrar Novo Membro</a>
+    <a href="{% url 'inicio' %}" class="btn btn-voltar">Inicio</a>
+
+    <table border="1" style="margin-top: 15px; width: 100%;">
+        <thead>
+            <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membro in membros %}
+            <tr>
+                <td>{{ membro.nome }}</td>
+                <td>{{ membro.cpf }}</td>
+                <td>{{ membro.celular }}</td>
+                <td>
+                    <a href="{% url 'editar_membro' membro.id %}" class="btn btn-sm btn-warning me-1">Editar</a> |
+                    <a href="{% url 'apagar_membro' membro.id %}" class="btn btn-sm btn-danger text-white me-1">Apagar</a> |
+                    <a href="{% url 'detalhe_membro' membro.id %}" class="btn btn-sm btn-info text-white me-1">Ver Ficha</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">Nenhum membro cadastrado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

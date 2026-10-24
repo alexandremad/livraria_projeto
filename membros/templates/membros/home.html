@@ -23,6 +23,21 @@
     <a href="{% url 'cadastrar_membro' %}" class="btn btn-voltar">Cadastrar Novo Membro</a>
     <a href="{% url 'inicio' %}" class="btn btn-voltar">Inicio</a>
 
+    <!-- Busca por nome ou CPF -->
+    <form method="get" class="row g-2 mb-3 align-items-center no-print">
+        <div class="col-12 col-md-8 col-lg-6">
+            <input type="text" name="q" value="{{ busca }}" class="form-control" placeholder="Buscar por nome ou CPF" autocomplete="off">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-dark">Buscar</button>
+            {% if busca %}<a href="{% url 'home' %}" class="btn btn-outline-secondary">Limpar</a>{% endif %}
+        </div>
+        {% if busca %}
+        <div class="col-12 small {% if total_busca %}text-muted{% else %}text-danger{% endif %}">
+            {% if total_busca %}{{ total_busca }} membro{{ total_busca|pluralize }} encontrado{{ total_busca|pluralize }} para "{{ busca }}".{% else %}Nenhum membro encontrado para "{{ busca }}".{% endif %}
+        </div>
+        {% endif %}
+    </form>
     <table border="1" style="margin-top: 15px; width: 100%;">
         <thead>
             <tr>

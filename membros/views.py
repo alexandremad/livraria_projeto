@@ -1,5 +1,6 @@
 from django.urls import reverse_lazy
 from .models import Membro
+from .busca import filtrar_membros
 from .forms import MembroForm
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, DetailView # Importe DetailView
 from .models import Membro
@@ -10,6 +11,15 @@ class HomeView(ListView):
     model = Membro
     template_name = 'membros/home.html'
     context_object_name = 'membros'
+
+    def get_queryset(self):
+        return filtrar_membros(super().get_queryset(), self.request.GET.get('q', ''))
+
+    def get_context_data(self, **kwargs):
+        contexto = super().get_context_data(**kwargs)
+        contexto['busca'] = self.request.GET.get('q', '').strip()
+        contexto['total_busca'] = self.object_list.count()
+        return contexto
 
 # 2. Cadastrar membro
 class MembroCreateView(CreateView):
